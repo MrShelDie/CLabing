@@ -49,24 +49,5 @@ int main()
 
     FreePassengerArray(passengers, count_of_passengers);
 
-    //AppendInPassengersArray(FillPassengerData(NewPassenger()), &passengers, &count_of_passengers);
-    //
-    //PrintPassengerInfo(passengers[0]);
-    //PrintPassengerInfo(passengers[1]);
-
-
-    //Passenger** passengers_on_the_same_flight = NewPassengersArray(count_of_passengers);
-
-    //FindPassengersOnTheSameFlight(1, passengers, passengers_on_the_same_flight, count_of_passengers);
-
-    //int fitted_array_size = 0;
-
-    //FitArraySize_Passenger(&passengers_on_the_same_flight, count_of_passengers, &fitted_array_size);
-
-    //SortPassengerArrayByName(passengers_on_the_same_flight, fitted_array_size);
-
-    //PrintPassengerInfo(passengers_on_the_same_flight[0]);
-    //PrintPassengerInfo(passengers_on_the_same_flight[1]);
-
     return 0;
 }
