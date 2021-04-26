@@ -1,8 +1,9 @@
 /*
 TODO:
-    1. Ñheck for correspondence between the flight numberand the name of the airline
+    1. Ð¡heck for correspondence between the flight numberand the name of the airline
     2. Safe input in functions marked with "is not safe" comments
-    3. Dix functions marked with "TODO"
+    3. Fix functions marked with "TODO"
+	4. Sometimes an error pops up when the program ends
 */
 
 #include <stdio.h>
@@ -15,11 +16,22 @@ TODO:
 
 void PromptUserInputPassengerData_str(const char* prompt, char** field_p, char* buff, int buff_size);
 void PromptUserInputPassengerData_int(const char* prompt, int* field);
+
 void SetStructFieldFromKeyboard_str(char** field_p, char* buff, int buff_size);
 void SetStructFieldFromKeyboard_int(int* field);
+
 void PrintPassengerInfo_Row(const Passenger* passenger);
+void PrintAllAirlineFlights(const char* company_name, Passenger** passengers, int count_of_passengers);
 void PrintSeparatorStr();
-int cmp(const Passenger** a, const Passenger** b);
+
+Passenger** FindPassengersOnTheSameFlight
+(int flight_number, Passenger** all_passengers, Passenger** passengers_on_the_same_flight, int array_size);
+
+Passenger** FitArraySize_Passenger(Passenger*** passengers, int in_array_size, int* out_array_size);
+Passenger** SortPassengerArrayByName(Passenger** passengers, int array_size);
+
+int cmp_str(const Passenger** a, const Passenger** b);
+int cmp_int(const int* a, const int* b);
 
 
 typedef struct Passenger
@@ -114,16 +126,32 @@ void PromptUserInputPassengerData_int(const char* prompt, int* field)
 }
 
 
-char* PromptUserInputStr(const char* prompt)     // is not safe
+char* PromptUserInputStr(const char* prompt, char* output)     // is not safe
 {
-    char str[BUFF_SIZE];
+    char* buff = (char*)calloc(BUFF_SIZE, sizeof(char));
     printf("%s", prompt);
     PrintSeparatorStr();
     printf("   ");
-    assert(scanf_s("%s", str, BUFF_SIZE) != 0);
+    assert(scanf_s("%s", buff, BUFF_SIZE) != 0);
+	int str_len = strlen(buff) + 1;
+
+	if (output == NULL)
+	{
+		output = (char*)malloc(sizeof(char) * str_len);
+		assert(output != NULL);
+	}
+	else
+	{
+		char* tmp = (char*)realloc(output, str_len * sizeof(char));
+		assert(tmp != NULL);
+		output = tmp;
+	}
+
+	strcpy_s(output, str_len, buff);
+
     PrintSeparatorStr();
     printf("\n\n");
-    return str;
+    return output;
 }
 
 
@@ -196,7 +224,7 @@ void PrintPassengerInfo_Row(const Passenger* passenger)
     printf
     (
         "%12s\t%17s\t%14s\t%13d\t%12d\n", passenger->company_name, passenger->passenger_surname,
-        passenger->passenger_surname, passenger->flight_number, passenger->ticket_price
+        passenger->passenger_name, passenger->flight_number, passenger->ticket_price
     );
 }
 
@@ -214,7 +242,7 @@ void PrintPassengersArray(const Passenger** passengers, int array_size)
 }
 
 
-void PrintAllAirlineFlights(const char* company_name, const Passenger** passengers, int count_of_passengers)    // TODO : if no flights were found
+void PrintAllAirlineFlights(const char* company_name, const Passenger** passengers, int count_of_passengers)    // TODO: if no flights were found
 {
     int* flights = (int*)calloc(count_of_passengers, sizeof(int));
     assert(flights != NULL);
@@ -229,11 +257,23 @@ void PrintAllAirlineFlights(const char* company_name, const Passenger** passenge
         }
     }
 
-    printf("Company name: %s\n", company_name);
+	int count_of_flights = flight_ptr - flights;
+
+    printf("Company name: %s\n\n", company_name);
     printf("Flights:\n");
 
-    for (int i = 0; i < count_of_passengers && ((int*)flights)[i] != 0; i++)
-        printf("%d\n", flights[i]);
+	qsort(flights, count_of_flights, sizeof(int), cmp_int);
+
+	if (count_of_flights > 0)
+		printf("%d\n", flights[0]);
+
+	for (int i = 1; i < count_of_flights; i++)
+	{
+		if (flights[i - 1] != flights[i])
+			printf("%d\n", flights[i]);
+	}
+
+	printf("\n\n");
 
     free(flights);
 }
@@ -321,14 +361,32 @@ Passenger** FitArraySize_Passenger(Passenger*** passengers, int in_array_size, i
 
 Passenger** SortPassengerArrayByName(Passenger** passengers, int array_size)
 {
-    qsort(passengers, array_size, sizeof(Passenger*), cmp);
+    qsort(passengers, array_size, sizeof(Passenger*), cmp_str);
     return passengers;
 }
 
 
-int cmp(const Passenger** a, const Passenger** b)
+int cmp_str(const Passenger** a, const Passenger** b)
 {
     return strcmp((*a)->passenger_surname, (*b)->passenger_surname);
+}
+
+
+int cmp_int(const int* a, const int* b)
+{
+	return *a - *b;
+}
+
+
+void PrintPassengersOfGivenFlingt(Passenger** passengers, int count_of_passengers)
+{
+	Passenger** passengers_on_the_same_flight = NewPassengersArray(count_of_passengers);
+	FindPassengersOnTheSameFlight(PromptUserInputNumber("Enter the flight number\n"), passengers, passengers_on_the_same_flight, count_of_passengers);
+	int count_of_passengers_on_the_same_flight = 0;
+	FitArraySize_Passenger(&passengers_on_the_same_flight, count_of_passengers, &count_of_passengers_on_the_same_flight);
+	SortPassengerArrayByName(passengers_on_the_same_flight, count_of_passengers_on_the_same_flight);
+	PrintPassengersArray(passengers_on_the_same_flight, count_of_passengers_on_the_same_flight);
+	FreePassengerArray(passengers_on_the_same_flight, count_of_passengers_on_the_same_flight);
 }
 
 
